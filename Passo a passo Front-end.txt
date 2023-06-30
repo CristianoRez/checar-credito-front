@@ -1,0 +1,10 @@
+Front end:
+Ofertas
+Em "Consulte ofertas antes de realizar o empréstimo" é possível consultar quais são as ofertas do cliente apenas adicionanado o CPF e enviando o formulário, caso seja adicionado o valor, é possível vizualizar as melhores ofertas de acordo com o credito solicitado e em ordem crescente de acordo com o valor dos juros.
+Após apertar o botão demora alguns segundos para o front-end receber a resposta.
+Todos os clientes, bancos, modalidades e ofertas são salvos no banco de dados.
+
+Em "Faça o empréstimo" se adiciona todos os dados e assim será salvo no banco de dados o empréstimo contendo todas as informações. 
+
+Empréstimos
+Aqui fica salvo todos os empréstimos realizados podendo ser apagados por meio da lixeira na direita.
