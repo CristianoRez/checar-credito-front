@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checar ofertas</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+
+  <body>
+
+    <div class="container mt-4">
+
+      <!-- Form para checar ofertas -->
+      <div class="row align-items-center">
+        <div class="col-md-10 mx-auto col-lg-5">
+          <form class="p-1 p-md-5 border rounded-3 bg-light text-center">
+            <h2 class="mb-3">Consulte as ofertas antes de realizar o empréstimo</h2>
+            <div class="form-floating mb-3">
+              <input
+                type="text"
+                class="form-control"
+                id="inputCPF"
+                placeholder="CPF"
+              />
+              <label for="inputCPF">CPF*</label>
+            </div>
+            <div class="form-floating mb-3">
+              <input
+                type="text"
+                class="form-control"
+                id="inputValor"
+                placeholder="valor"
+              />
+              <label for="inputValor">Valor</label>
+            </div>
+            <button class="btn btn-lg btn-blue" type="submit">Enviar</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Exibição de ofertas -->
+      <div id="lista-instituicoes" class="row mt-4"></div>
+
+    </div>
+
+    <!-- Form para criar empréstimo -->
+    <div class="container mt-4">
+      <div class="row align-items-center">
+        <div class="col-md-10 mx-auto col-lg-5">
+          <form
+            class="p-1 p-md-5 border rounded-3 bg-light text-center"
+            id="formEmprestimo"
+          >
+            <h2 class="mb-3">Faça o empréstimo</h2>
+            <div class="form-floating mb-3">
+              <input
+                type="text"
+                class="form-control"
+                id="inputCPF"
+                placeholder="CPF"
+              />
+              <label for="inputCPF">CPF*</label>
+            </div>
+            <div class="form-floating mb-3">
+              <input
+                type="string"
+                class="form-control"
+                id="inputIdInstituicao"
+                placeholder="IdInstituicao"
+              />
+              <label for="inputIdInstituicao">Id da instituição*</label>
+            </div>
+            <div class="form-floating mb-3">
+              <input
+                type="string"
+                class="form-control"
+                id="inputIdModalidade"
+                placeholder="IdModalidade"
+              />
+              <label for="inputIdModalidade">Codigo da Modalidade*</label>
+            </div>
+            <div class="form-floating mb-3">
+              <input
+                type="text"
+                class="form-control"
+                id="inputValor"
+                placeholder="valor"
+              />
+              <label for="inputValor">Valor*</label>
+            </div>
+            <div class="form-floating mb-3">
+              <input
+                type="number"
+                class="form-control"
+                id="inputParcelas"
+                placeholder="parcelas"
+              />
+              <label for="inputParcelas">Parcelas*</label>
+            </div>
+            <button class="btn btn-lg btn-blue" type="submit">Finalizar</button>
+          </form>
+        </div>
+
+        <!-- Exibição do emprestimo realizado -->
+      </div>
+      <div id="lista-emprestimos" class="row mt-4 justify-content-center text-center"></div>
+    </div>
+
+    <div class="text-center mb-4 mt-4 sticky-bottom">
+      <a href="index.html" class="btn btn-blue">Home</a>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var formulario = document.querySelector("form");
+        formulario.addEventListener("submit", function (event) {
+          event.preventDefault();
+          var cpf = document.getElementById("inputCPF").value;
+          var valor = document.getElementById("inputValor").value;
+          enviarRequisicao(cpf, valor);
+        });
+
+        // Envio de requisição para o back-end com e sem a atribuição do credito
+        function enviarRequisicao(cpf, valor) {
+          const dados = {
+            cpf: cpf,
+            credito: valor,
+          };
+
+          var url =
+            valor == ""
+              ? "http://127.0.0.1:8000/api/checar-bancos"
+              : "http://127.0.0.1:8000/api/melhores-ofertas";
+
+          axios
+            .post(url, dados)
+            .then(function (response) {
+              if (valor.trim() === "") {
+                exibirDados(response.data);
+              } else {
+                exibirDados2(response.data);
+              }
+            })
+            .catch(function (error) {
+              console.error(error);
+            });
+        }
+
+        // Função para exibir as ofertas sem a atribuição do credito
+        function exibirDados(response) {
+          var listaInstituicoes = document.getElementById("lista-instituicoes");
+          listaInstituicoes.innerHTML = "";
+
+          response.instituicoes.forEach(function (instituicao) {
+            var col = document.createElement("div");
+            col.className =
+              "col-12 mt-4 text-center instcolor row justify-content-center rounded";
+            col.innerHTML =
+              "<h3 class='mb-1 mt-3'>" +
+              instituicao.nome +
+              "</h3>" +
+              "<p>Id:" +
+              instituicao.id;
+            instituicao.modalidades.forEach(function (modalidade) {
+              var divModalidade = document.createElement("div");
+              divModalidade.className = "card col-3 p-3 m-3 modcolor";
+              divModalidade.innerHTML =
+                "<h4 class='mb-3'>" +
+                modalidade.nome +
+                "</h4>" +
+                "<p><strong>Código da modalidade: </strong>" +
+                modalidade.codigo +
+                "</p>" +
+                "<p><strong>Valor mínimo:</strong> R$ " +
+                modalidade.oferta.valorMin +
+                "</p>" +
+                "<p><strong>Valor máximo:</strong> R$ " +
+                modalidade.oferta.valorMax +
+                "</p>" +
+                "<p><strong>Juros ao mês:</strong> " +
+                modalidade.oferta.jurosMes +
+                "</p>";
+
+              col.appendChild(divModalidade);
+            });
+
+            listaInstituicoes.appendChild(col);
+          });
+        }
+
+        // Função para exibir dados com a atribuição do credito
+        function exibirDados2(response) {
+          var listaInstituicoes = document.getElementById("lista-instituicoes");
+          listaInstituicoes.innerHTML = "";
+
+          response.instituicoes.forEach(function (instituicao) {
+            var col = document.createElement("div");
+            col.className =
+              "col-12 mt-4 text-center instcolor row justify-content-center rounded";
+            col.innerHTML =
+              "<h3 class='mb-1 mt-3'>" +
+              instituicao.nome +
+              "</h3>" +
+              "<p>Id:" +
+              instituicao.id;
+
+            instituicao.modalidades.forEach(function (modalidade) {
+              var divModalidade = document.createElement("div");
+              divModalidade.className = "card col-3 p-3 m-3 modcolor";
+              divModalidade.innerHTML =
+                "<h4 class='mb-3'>" +
+                modalidade.nome +
+                "</h4>" +
+                "<p><strong>Código: </strong>" +
+                modalidade.codigo +
+                "</p>" +
+                "<p><strong>Valor solicitado: </strong> R$ " +
+                modalidade.oferta.ValorSolicitado +
+                "<p><strong>Valor à pagar:</strong> R$ " +
+                modalidade.oferta.ValorAPagar +
+                "<p><strong>Juros ao mês:</strong> " +
+                modalidade.oferta.TaxaDeJuros +
+                "<p><strong>Menor prazo:</strong>" +
+                modalidade.oferta.Parcelas.qntmenor +
+                "</p>" +
+                "<p><strong>Maior parcela:</strong> R$ " +
+                modalidade.oferta.Parcelas.menor.toFixed(2) +
+                "</p>" +
+                "<p><strong>Maior prazo:</strong>" +
+                modalidade.oferta.Parcelas.qntmaior +
+                "</p>";
+              "<p><strong>Menor parcela:</strong> R$ " +
+                modalidade.oferta.Parcelas.maior.toFixed(2) +
+                "</p>";
+
+              col.appendChild(divModalidade);
+            });
+
+            listaInstituicoes.appendChild(col);
+          });
+        }
+      });
+
+      // Coletando os dados do form para realizar empréstimo
+        document.addEventListener("DOMContentLoaded", function () {
+        var formEmprestimo = document.getElementById("formEmprestimo");
+        formEmprestimo.addEventListener("submit", function (event) {
+          event.preventDefault();
+          var cpf = document.getElementById("inputCPF").value;
+          var credito = document.getElementById("inputValor").value;
+          var instituicaoId =
+            document.getElementById("inputIdInstituicao").value;
+          var modalidadeCod =
+            document.getElementById("inputIdModalidade").value;
+          var parcelas = document.getElementById("inputParcelas").value;
+          enviarRequisicaoEmprestimo(
+            cpf,
+            credito,
+            instituicaoId,
+            modalidadeCod,
+            parcelas
+          );
+        });
+
+        // Função que envia requisição do empréstimo para o backend
+        function enviarRequisicaoEmprestimo(
+          cpf,
+          credito,
+          instituicaoId,
+          modalidadeCod,
+          parcelas
+        ) {
+          const dados = {
+            cpf: cpf,
+            credito: credito,
+            instituicaoId: instituicaoId,
+            modalidadeCod: modalidadeCod,
+            parcelas: parcelas,
+          };
+
+          var url = "http://127.0.0.1:8000/api/solicitar-emprestimo"; // Substitua pela URL do seu backend
+
+          axios
+            .post(url, dados)
+            .then(function (response) {
+              exibirEmprestimos(response.data);
+            })
+            .catch(function (error) {
+              console.error(error);
+            });
+        }
+
+        // Função para exibir o empréstimo
+        function exibirEmprestimos(emprestimos) {
+          var listaEmprestimos = document.getElementById("lista-emprestimos");
+          listaEmprestimos.innerHTML = "";
+
+          if (emprestimos.Answer == 1) {
+            var mensagem = document.createElement("p");
+            mensagem.textContent = "Empréstimo já solicitado.";
+            listaEmprestimos.appendChild(mensagem);
+            var card = document.createElement("div");
+            card.classList.add("col-md-4", "card", "p-3", "m-3");
+
+            var cardBody = document.createElement("div");
+            cardBody.classList.add("card", "mb-4", "shadow-sm");
+
+            var cardTitle = document.createElement("h5");
+            cardTitle.classList.add("card-title", "text-center", "mt-3");
+            cardTitle.textContent = emprestimos.Loan.bank_id.name;
+
+            var cardText = document.createElement("p");
+            cardText.classList.add("cart-text");
+            cardText.innerHTML =
+              "<strong>CPF: </strong> " +
+              emprestimos.Loan.client_id.cpf +
+              "<br>" +
+              "<strong>Modalidade:</strong> " +
+              emprestimos.Loan.modality_id.name +
+              "<br>" +
+              "<strong>Valor solicitado</strong> " +
+              emprestimos.Loan.amount_received +
+              "<br>" +
+              "<strong>Valor a pagar</strong> " +
+              emprestimos.Loan.amount_payable +
+              "<br>" +
+              "<strong>Parcelas:</strong> " +
+              emprestimos.Loan.installments +
+              "<br>" +
+              "<strong>Valor da Parcela:</strong> R$" +
+              emprestimos.Loan.installments_value +
+              "<br>" +
+              "<strong>Juros</strong> " +
+              emprestimos.Loan.interest_rate +
+              "<br>";
+
+            cardBody.appendChild(cardTitle);
+            cardBody.appendChild(cardText);
+            card.appendChild(cardBody);
+            listaEmprestimos.appendChild(card);
+          } else {
+            var mensagem = document.createElement("p");
+            mensagem.textContent = "Empréstimo solicitado com sucesso";
+            listaEmprestimos.appendChild(mensagem);
+            var card = document.createElement("div");
+            card.classList.add("col-md-4");
+
+            var cardBody = document.createElement("div");
+            cardBody.classList.add("card", "mb-4", "shadow-sm");
+
+            var cardTitle = document.createElement("h5");
+            cardTitle.classList.add("card-title", "text-center", "mt-3");
+            cardTitle.textContent = emprestimos.Loan.bank_id.name;
+
+            var cardText = document.createElement("p");
+            cardText.classList.add("card-text");
+            cardText.innerHTML =
+              "<strong>CPF: </strong> " +
+              emprestimos.Loan.client_id.cpf +
+              "<br>" +
+              "<strong>Modalidade:</strong> " +
+              emprestimos.Loan.modality_id.name +
+              "<br>" +
+              "<strong>Valor solicitado</strong> " +
+              emprestimos.Loan.amount_received +
+              "<br>" +
+              "<strong>Valor a pagar</strong> " +
+              emprestimos.Loan.amount_payable +
+              "<br>" +
+              "<strong>Parcelas:</strong> " +
+              emprestimos.Loan.installments +
+              "<br>" +
+              "<strong>Valor da Parcela:</strong> R$" +
+              emprestimos.Loan.installments_value +
+              "<br>" +
+              "<strong>Juros</strong> " +              
+              emprestimos.Loan.interest_rate +
+              "<br>";
+
+            cardBody.appendChild(cardTitle);
+            cardBody.appendChild(cardText);
+            card.appendChild(cardBody);
+            listaEmprestimos.appendChild(card);
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

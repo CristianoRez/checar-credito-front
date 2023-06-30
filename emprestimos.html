@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emprestimos</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <script>
+      // Formatando CPF
+      function formatarCPF(cpf) {
+        return cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, "$1.$2.$3-$4");
+      }
+      // Formatando dinheiro
+      function formatarDinheiro(valor) {
+        const formatter = new Intl.NumberFormat("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        return formatter.format(valor);
+      }
+
+      // Preenchendo tabela com os dados da requisição carregarDados()
+      function preencherTabela(dados) {
+        var tabela = document.getElementById("tabela-emprestimos");
+        var tbody = tabela.querySelector("tbody");
+
+        tbody.innerHTML = "";
+
+        dados.forEach(function (item) {
+          var row = tbody.insertRow();
+          row.innerHTML =
+            "<td>" +
+            formatarCPF(item.client_id.cpf) +
+            "</td>" +
+            "<td>" +
+            item.bank_id.name +
+            "</td>" +
+            "<td>" +
+            item.modality_id.name +
+            "</td>" +
+            "<td>" +
+            formatarDinheiro(item.amount_received) +
+            "</td>" +
+            "<td>" +
+            formatarDinheiro(item.amount_payable) +
+            "</td>" +
+            "<td>" +
+            item.installments +
+            "</td>" +
+            "<td>" +
+            item.interest_rate +
+            "</td>" +
+            "<td><i class='bi bi-trash trash-icon' data-id='" +
+            item.id +
+            "' onclick='apagarEmprestimo(this)'></i></td>";
+        });
+      }
+
+      // Requisitando dados do Back-end
+      function carregarDados() {
+        axios
+          .get("http://127.0.0.1:8000/api/todos-emprestimos")
+          .then(function (response) {
+            var dados = response.data;
+            preencherTabela(dados);
+          })
+          .catch(function (error) {
+            console.error(error);
+          });
+      }
+
+      window.addEventListener("DOMContentLoaded", function () {
+        carregarDados();
+      });
+
+      // Função para apagar emprestimos do banco de dados
+      function apagarEmprestimo(element) {
+        const emprestimoId = element.getAttribute("data-id");
+        const id = {
+          id: emprestimoId,
+        };
+
+        axios
+          .post("http://127.0.0.1:8000/api/apagar-emprestimo", id)
+          .then(function (response) {
+            carregarDados();
+          })
+          .catch(function (error) {
+            console.error(error);
+          });
+      }
+    </script>
+  </head>
+
+  <body>
+    <div class="container mt-4">
+      <h1>Todos os empréstimos</h1>
+      <!-- Tabela contendo todos os emprestimos -->
+      <table id="tabela-emprestimos" class="table table-striped">
+        <thead>
+          <tr>
+            <th class="cpf">CPF</th>
+            <th class="instituicao">Instituição</th>
+            <th class="modalidade">Modalidade</th>
+            <th class="recebido">Recebido</th>
+            <th class="apagar">A pagar</th>
+            <th class="prestacoes">Prestações</th>
+            <th class="juros">Juros</th>
+          </tr>
+        </thead>
+
+        <!-- Local onde as linhas são preenchidas -->
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="container mt-4 text-center">
+      <a href="index.html" class="btn btn-blue">Home</a>
+    </div>
+  </body>
+</html>
